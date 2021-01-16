@@ -71,6 +71,7 @@ for i=tpts_of_interest % Time point of interest
     try
         smoothed_data=spm_mesh_smooth(spm_mesh,data,10);
     catch
+        warning('Could not smooth data with spm_mesh_smooth. Data displayed will be the original');
         smoothed_data=data;
     end
     
