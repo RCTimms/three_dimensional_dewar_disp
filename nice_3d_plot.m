@@ -81,6 +81,7 @@ for i=tpts_of_interest % Time point of interest
     try
         colormap(brewermap(128,col_map))
     catch
+        ft_hastoolbox('BREWERMAP',0,0)
         colormap(jet)
     end
     drawnow
