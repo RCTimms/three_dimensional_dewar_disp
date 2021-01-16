@@ -1,14 +1,9 @@
 clc; clearvars; close all
 % Script to display some MEG data on a dewar
 % Currently requires brewer_maps to function and is only compatible with
-% the CTF275 system. MEG data must be in an SPM D object
+% the CTF275 system
 
 addpath('/Users/rtimms/Downloads/osl/brewer_maps')
-
-%%% OPTIONS:
-show_iso_lines=1;
-disp_anat=0;
-
 
 % Load in some co-registered MEG data
 D_coreg=spm_eeg_load( '/Volumes/TASER/Notts_motor/03677_processed/03677341_Ellie_20170615_04/edff03677341_Ellie_20170615_04.mat')
@@ -25,14 +20,13 @@ mesh=[];
 mesh.tri = p.Faces;
 % For now, manually remove the obviously wrong faces. This could be
 % automated by checking for euclidian distances between points, i.e. faces
-% which have huge surface areas are likely to be convhull "errors"
+% which have huge surface areas are likely to be errors
 mesh.tri([251,252,254,255,77,253,188,417,418,315],:)=[];
 mesh.pos = p.Vertices;
 close all; % close the temporary figure (annoying)
 
 
-% We could use something like this, to work out the surface area of the
-% faces, for example
+% Could use something like this, for example
 % verts = get(p, 'Vertices');
 % faces = get(p, 'Faces');
 % a = verts(faces(:, 2), :) - verts(faces(:, 1), :);
@@ -78,15 +72,17 @@ colormap(brewermap(128,'RdBu'))
 % The following line will plot the subject anatomy within the dewar. We can
 % extract the code from this function and make it pure FieldTrip with
 % relative ease
+disp_anat=0;
 if disp_anat==1;spm_eeg_inv_checkdatareg_3Donly(D_coreg);end
 
-% Show magnetic field isolines?
+show_iso_lines=1;
+
 if show_iso_lines==1;
     Surf = {mesh.tri,[meg_sensors(:,1), meg_sensors(:,2) meg_sensors(:,3)]};
     IsoLine(Surf,data,10);
 end
 
-%% How the isoline function works
+%%
 % EXAMPLE 1: Isolines of f(x,y,z) = xy+20z on a triangular mesh -----------
 figure(1), clf reset                       
 set(1,'Name','Isolines of f(x,y,z) = xy+20z on a triangular mesh')
