@@ -7,18 +7,23 @@ addpath('/Users/rtimms/Downloads/osl/brewer_maps')
 
 %%% OPTIONS:
 show_iso_lines=1;
+N_isolines=1;
 disp_anat=0;
+tpts_of_interest=350:360; % what data to show from the D object. If a vector is provided then a movie will play
+col_map='RdBu';
 
 
 % Load in some co-registered MEG data
 D_coreg=spm_eeg_load( '/Volumes/TASER/Notts_motor/03677_processed/03677341_Ellie_20170615_04/edff03677341_Ellie_20170615_04.mat')
 
-show_data_on_dewar(D_coreg,show_iso_lines,disp_anat)
+show_data_on_dewar(D_coreg,show_iso_lines,disp_anat,N_isolines,tpts_of_interest,col_map)
 
-function show_data_on_dewar(D_coreg,show_iso_lines,disp_anat);
+function show_data_on_dewar(D_coreg,show_iso_lines,disp_anat,N_isolines,tpts_of_interest,col_map);
+% Need to add documentation to inputs and assign defaults here:
 
 
-% Get the sensor info
+% Get the sensor info. Should be capable of plotting both grad and ref data
+% in the future
 sens=D_coreg.sensors('MEG');
 meg_sensors=sens.chanpos(find(strcmp(sens.chantype,'meggrad')),:);
 
@@ -52,7 +57,7 @@ figure
 hold all;
 ft_plot_sens(sens,'facecolor','none', 'coilshape','point','style','k')
 
-for i=350 % Time point of interest
+for i=tpts_of_interest % Time point of interest
     
     % Just get the MEG data - should code this with something like
     % strcmp('MEGGRAD')... etc
@@ -72,22 +77,25 @@ for i=350 % Time point of interest
     % Plot the mesh
     ft_plot_mesh(mesh,'vertexcolor',smoothed_data,'edgecolor','none','faceindex','False','facealpha',0.81)
     
-    colormap jet
+    % Make the colourmap nice and sexy, if possible
+    try
+        colormap(brewermap(128,col_map))
+    catch
+        colormap(jet)
+    end
     drawnow
 end
 
-% Make the colourmap nice and sexy
-colormap(brewermap(128,'RdBu'))
 
 % The following line will plot the subject anatomy within the dewar. We can
 % extract the code from this function and make it pure FieldTrip with
-% relative ease
+% relative ease in the future
 if disp_anat==1;spm_eeg_inv_checkdatareg_3Donly(D_coreg);end
 
 % Show magnetic field isolines?
 if show_iso_lines==1;
     Surf = {mesh.tri,[meg_sensors(:,1), meg_sensors(:,2) meg_sensors(:,3)]};
-    IsoLine(Surf,data,10);
+    IsoLine(Surf,data,N_isolines);
 end
 end
 
