@@ -1,0 +1,5 @@
+* Add FieldTrip specific version
+* Add SPM specific version
+* Add OSL specific version
+* Give option to plot source data on cortex too
+* Multiple colourbars
