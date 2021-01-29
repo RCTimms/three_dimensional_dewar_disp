@@ -38,13 +38,24 @@ close all; % close the temporary figure (annoying)
 
 % We could use something like this, to work out the surface area of the
 % faces, for example
-% verts = get(p, 'Vertices');
-% faces = get(p, 'Faces');
-% a = verts(faces(:, 2), :) - verts(faces(:, 1), :);
-% b = verts(faces(:, 3), :) - verts(faces(:, 1), :);
-% c = cross(a, b, 2);
-% area = 1/2 * sum(sqrt(sum(c.^2, 2)));
-% fprintf('\nThe surface area is %f\n\n', area);
+verts = mesh.pos;
+faces = mesh.tri;
+a = verts(faces(:, 2), :) - verts(faces(:, 1), :);
+b = verts(faces(:, 3), :) - verts(faces(:, 1), :);
+c = cross(a, b, 2);
+area = 1/2 * sum(sqrt(sum(c.^2, 2)));
+fprintf('\nThe surface area is %f\n\n', area);
+
+
+thing = sqrt(sum(c.^2, 2));
+% outliers = isoutlier(thing, 'MEAN');
+
+fresh = mean(thing) + 2 * std(thing);
+outliers = find(thing > fresh);
+
+% [~, beta] = maxk(thing, 5);
+
+mesh.tri(outliers,:)=[];
 
 
 
