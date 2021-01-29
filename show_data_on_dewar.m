@@ -83,12 +83,12 @@ for i=tpts_of_interest % Time point of interest
     end
     drawnow
 end
-
-
+axis on
+pause(2)
 % The following line will plot the subject anatomy within the dewar. We can
 % extract the code from this function and make it pure FieldTrip with
 % relative ease in the future
-if disp_anat==1;spm_eeg_inv_checkdatareg_3Donly(D_coreg);end
+if disp_anat==1;hold all;spm_eeg_inv_checkdatareg_3Donly(D_coreg);end
 
 % Show magnetic field isolines?
 if show_iso_lines==1;
