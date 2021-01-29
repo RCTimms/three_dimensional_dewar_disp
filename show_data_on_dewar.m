@@ -99,7 +99,7 @@ pause(2)
 % The following line will plot the subject anatomy within the dewar. We can
 % extract the code from this function and make it pure FieldTrip with
 % relative ease in the future
-if disp_anat==1;hold all;spm_eeg_inv_checkdatareg_3Donly(D_coreg);end
+if disp_anat==1;hold all;dewar_disp_cortex(D_coreg);end
 
 % Show magnetic field isolines?
 if show_iso_lines==1;
@@ -199,4 +199,87 @@ end
 % Render with 'zbuffer' for best results ----------------------------------
 set(gcf,'Renderer','zbuffer')
 % -------------------------------------------------------------------------
+end
+
+function dewar_disp_cortex(varargin)
+% OSL's adaptation of spm_eeg_inv_checkdatareg.m.
+
+% Display of the coregistred meshes and sensor locations in MRI space for
+% quality check by eye.
+% Fiducials which were used for rigid registration are also displayed. If a
+% fused data set is provided, and no modality index is specified, we
+% default to showing the MEG coregistration result.
+%
+% Last modified by RT, 2020.
+%
+% FORMAT spm_eeg_inv_checkdatareg(D, val, ind)
+%__________________________________________________________________________
+% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+
+% Jeremie Mattout
+% $Id: spm_eeg_inv_checkdatareg.m 3731 2010-02-17 14:45:18Z vladimir $
+
+% SPM graphics figure
+%--------------------------------------------------------------------------
+
+%%
+[D,val] = spm_eeg_inv_check(varargin{:});
+datareg = D.inv{val}.datareg;
+
+% We sometimes end up with a "fused" M/EEG dataset. Check for this now
+% before doing anything else. We'll default to showing the MEG co-reg
+% result unless being told otherwise by the user.
+if nargin < 3
+    if strcmp(D.inv{val}.datareg(1).modality,'EEG')==1;
+        if strcmp(D.inv{val}.datareg(2).modality,'MEG')==1;
+            MEG_mod_ind=2;
+        end
+    elseif strcmp(D.inv{val}.datareg(1).modality,'MEG')==1;
+        MEG_mod_ind=1;
+end
+ind = MEG_mod_ind;
+else
+    ind = varargin{3};
+end
+ 
+
+% --- Set up variables ---
+%==========================================================================
+modality = datareg(ind).modality;
+meegfid =  datareg(ind).fid_eeg;
+mrifid =   datareg(ind).fid_mri;
+
+mesh = spm_eeg_inv_transform_mesh(datareg(ind).fromMNI*D.inv{val}.mesh.Affine, D.inv{val}.mesh);
+
+sensors = datareg(ind).sensors;
+
+% Fgraph  = spm_figure('GetWin','Graphics'); figure(Fgraph); clf
+% Fgraph = figure;
+
+
+% --- DISPLAY ANATOMY ---
+%==========================================================================
+Mcortex = mesh.tess_ctx;
+Miskull = mesh.tess_iskull;
+Mscalp  = mesh.tess_scalp;
+
+% Cortical Mesh
+%--------------------------------------------------------------------------
+face    = Mcortex.face;
+vert    = Mcortex.vert;
+h_ctx   = patch('vertices',vert,'faces',face,'EdgeColor','b','FaceColor','b');
+hold on
+
+% Inner-skull Mesh
+%--------------------------------------------------------------------------
+face    = Miskull.face;
+vert    = Miskull.vert;
+h_skl   = patch('vertices',vert,'faces',face,'EdgeColor','r','FaceColor','none');
+
+% Scalp Mesh
+%--------------------------------------------------------------------------
+face    = Mscalp.face;
+vert    = Mscalp.vert;
+h_slp   = patch('vertices',vert,'faces',face,'EdgeColor',[1 .7 .55],'FaceColor','none');
+
 end
