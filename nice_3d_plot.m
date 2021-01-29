@@ -8,7 +8,7 @@ addpath('/Users/rtimms/Downloads/osl/brewer_maps')
 %%% OPTIONS:
 show_iso_lines=1;
 N_isolines=1;
-disp_anat=0;
+disp_anat=1;
 tpts_of_interest=350:360; % what data to show from the D object. If a vector is provided then a movie will play
 col_map='RdBu';
 

@@ -1,6 +1,16 @@
 function show_data_on_dewar(D_coreg,data_to_show,show_iso_lines,disp_anat,N_isolines,tpts_of_interest,col_map);
 % Need to add documentation to inputs and assign defaults here:
 
+% Also to do:
+% Fix mesh visualisation so that we can have user-defined colours (AND
+% source space data, in the future)
+% Get better isoline performance - they look rubbish!
+% Throw warnings if the anatomy cannot be displayed due to mesh files
+% missing
+% Test test test
+
+% Evan Roberts and Ryan Timms (@blobsonthebrain), 2021, post Brexit.
+
 
 % Get the sensor info. Should be capable of plotting both grad and ref data
 % in the future, and dealing with both inverted and non-inverted D objects.
@@ -23,38 +33,25 @@ sens=D_coreg.inv{1}.forward.sensors;
 meg_sensors=sens.chanpos(find(strcmp(sens.chantype,'meggrad')),:);
 
 % Approximate the dewar shape with the convhull function
-[k,av] = convhull(meg_sensors,'simplify',true);
+[k,~] = convhull(meg_sensors,'simplify',true);
 p=trisurf(k,meg_sensors(:,1),meg_sensors(:,2),meg_sensors(:,3),'FaceColor','c');
 mesh=[];
 mesh.tri = p.Faces;
 
-% For now, manually remove the obviously wrong faces. This could be
-% automated by checking for euclidian distances between points, i.e. faces
-% which have huge surface areas are likely to be convhull "errors"
-% mesh.tri([251,252,254,255,77,253,188,417,418,315],:)=[];
+
 mesh.pos = p.Vertices;
 close all; % close the temporary figure (annoying)
 
-
-% We could use something like this, to work out the surface area of the
-% faces, for example
+% Remove the obviously wrong faces to improve visuals - this might not work
+% for all dewars!
 verts = mesh.pos;
 faces = mesh.tri;
 a = verts(faces(:, 2), :) - verts(faces(:, 1), :);
 b = verts(faces(:, 3), :) - verts(faces(:, 1), :);
 c = cross(a, b, 2);
-area = 1/2 * sum(sqrt(sum(c.^2, 2)));
-fprintf('\nThe surface area is %f\n\n', area);
-
-
-thing = sqrt(sum(c.^2, 2));
-% outliers = isoutlier(thing, 'MEAN');
-
-fresh = mean(thing) + 2 * std(thing);
-outliers = find(thing > fresh);
-
-% [~, beta] = maxk(thing, 5);
-
+f_area = sqrt(sum(c.^2, 2));
+fresh = mean(f_area) + 2 * std(f_area);
+outliers = find(f_area > fresh);
 mesh.tri(outliers,:)=[];
 
 
@@ -94,8 +91,7 @@ for i=tpts_of_interest % Time point of interest
     end
     drawnow
 end
-axis on
-pause(2)
+
 % The following line will plot the subject anatomy within the dewar. We can
 % extract the code from this function and make it pure FieldTrip with
 % relative ease in the future
@@ -202,27 +198,18 @@ set(gcf,'Renderer','zbuffer')
 end
 
 function dewar_disp_cortex(varargin)
-% OSL's adaptation of spm_eeg_inv_checkdatareg.m.
+% OSL's, Evan's and Ryan's adaptation of spm_eeg_inv_checkdatareg.m.
 
-% Display of the coregistred meshes and sensor locations in MRI space for
-% quality check by eye.
-% Fiducials which were used for rigid registration are also displayed. If a
-% fused data set is provided, and no modality index is specified, we
-% default to showing the MEG coregistration result.
-%
-% Last modified by RT, 2020.
-%
-% FORMAT spm_eeg_inv_checkdatareg(D, val, ind)
-%__________________________________________________________________________
+% At some point we can change the colours to make the meshes look a bit
+% cooler
+
+% Original creditation:
+
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % Jeremie Mattout
 % $Id: spm_eeg_inv_checkdatareg.m 3731 2010-02-17 14:45:18Z vladimir $
 
-% SPM graphics figure
-%--------------------------------------------------------------------------
-
-%%
 [D,val] = spm_eeg_inv_check(varargin{:});
 datareg = D.inv{val}.datareg;
 
@@ -245,16 +232,8 @@ end
 
 % --- Set up variables ---
 %==========================================================================
-modality = datareg(ind).modality;
-meegfid =  datareg(ind).fid_eeg;
-mrifid =   datareg(ind).fid_mri;
-
 mesh = spm_eeg_inv_transform_mesh(datareg(ind).fromMNI*D.inv{val}.mesh.Affine, D.inv{val}.mesh);
 
-sensors = datareg(ind).sensors;
-
-% Fgraph  = spm_figure('GetWin','Graphics'); figure(Fgraph); clf
-% Fgraph = figure;
 
 
 % --- DISPLAY ANATOMY ---
@@ -266,20 +245,20 @@ Mscalp  = mesh.tess_scalp;
 % Cortical Mesh
 %--------------------------------------------------------------------------
 face    = Mcortex.face;
-vert    = Mcortex.vert;
-h_ctx   = patch('vertices',vert,'faces',face,'EdgeColor','b','FaceColor','b');
+vert    = Mcortex.vert/1000;
+h_ctx   = patch('vertices',vert,'faces',face,'EdgeColor','k','FaceColor','w');
 hold on
 
 % Inner-skull Mesh
 %--------------------------------------------------------------------------
 face    = Miskull.face;
-vert    = Miskull.vert;
-h_skl   = patch('vertices',vert,'faces',face,'EdgeColor','r','FaceColor','none');
+vert    = Miskull.vert/1000;
+h_skl   = patch('vertices',vert,'faces',face,'EdgeColor','k','FaceColor','none');
 
 % Scalp Mesh
 %--------------------------------------------------------------------------
 face    = Mscalp.face;
-vert    = Mscalp.vert;
-h_slp   = patch('vertices',vert,'faces',face,'EdgeColor',[1 .7 .55],'FaceColor','none');
+vert    = Mscalp.vert/1000;
+h_slp   = patch('vertices',vert,'faces',face,'EdgeColor','k','FaceColor','none');
 
 end
