@@ -102,6 +102,8 @@ if show_iso_lines==1;
     Surf = {mesh.tri,[meg_sensors(:,1), meg_sensors(:,2) meg_sensors(:,3)]};
     IsoLine(Surf,data,N_isolines);
 end
+
+fprintf('\nProcessing complete. OHBA-and-out.\n') % <- Credit to AJQ.
 end
 
 
